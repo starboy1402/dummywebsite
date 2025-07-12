@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <h2>Admin Login</h2>
+  <form id="login-form">
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+  <p id="message"></p>
+
+  <script type="module">
+    import { supabase } from '../supabase/init.js'
+
+    const form = document.getElementById('login-form')
+    const msg = document.getElementById('message')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        msg.innerText = 'Login failed: ' + error.message
+      } else {
+        // Check if user is admin
+        const { data: userData } = await supabase.auth.getUser()
+        const role = userData.user.user_metadata?.role
+
+        if (role !== 'admin') {
+          msg.innerText = 'Access denied. Not an admin.'
+        } else {
+          window.location.href = 'dashboard.html'
+        }
+      }
+    })
+  </script>
+</body>
+</html>

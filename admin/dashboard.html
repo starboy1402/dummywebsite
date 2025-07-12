@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <h2>Admin Dashboard</h2>
+  <button id="logout">Logout</button>
+  <select id="type-select">
+    <option value="citizen_certificates">Citizen Certificates</option>
+    <option value="birth_certificates">Birth Certificates</option>
+    <option value="death_certificates">Death Certificates</option>
+  </select>
+
+  <div id="dashboard-results" style="margin-top: 20px;"></div>
+
+  <script type="module">
+    import { supabase } from '../supabase/init.js'
+
+    const results = document.getElementById('dashboard-results')
+    const select = document.getElementById('type-select')
+
+    // Auth Check
+    const { data: userData, error } = await supabase.auth.getUser()
+    if (!userData.user || userData.user.user_metadata?.role !== 'admin') {
+      alert('Access denied.')
+      window.location.href = 'login.html'
+    }
+
+    // Logout
+    document.getElementById('logout').onclick = async () => {
+      await supabase.auth.signOut()
+      window.location.href = 'login.html'
+    }
+
+    async function loadData(table) {
+      const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false })
+
+      if (error) {
+        results.innerHTML = `<p>Error: ${error.message}</p>`
+        return
+      }
+
+      results.innerHTML = data.map(row => `
+        <div style="background: #fff; margin-bottom: 15px; padding: 10px; border-radius: 8px;">
+          <strong>Name:</strong> ${row.name}<br>
+          ${row.nid_number ? `<strong>NID:</strong> ${row.nid_number}<br>` : ''}
+          ${row.dob ? `<strong>DOB:</strong> ${row.dob}<br>` : ''}
+          ${row.place ? `<strong>Place:</strong> ${row.place}<br>` : ''}
+          <strong>Submitted:</strong> ${row.created_at}
+        </div>
+      `).join('')
+    }
+
+    select.addEventListener('change', () => loadData(select.value))
+    window.onload = () => loadData(select.value)
+  </script>
+</body>
+</html>

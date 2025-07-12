@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Application Status Check</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <h2>Check Application Status</h2>
+  <form id="status-form">
+    <input type="text" id="search-name" placeholder="Full Name (optional)">
+    <input type="date" id="search-dob" placeholder="Date of Birth (optional)">
+    <input type="text" id="search-nid" placeholder="NID Number (optional)">
+    <button type="submit">Search</button>
+  </form>
+  <div id="results"></div>
+
+  <script type="module">
+    import { supabase } from '../supabase/init.js'
+
+    const form = document.getElementById('status-form')
+    const results = document.getElementById('results')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      const name = document.getElementById('search-name').value
+      const dob = document.getElementById('search-dob').value
+      const nid = document.getElementById('search-nid').value
+
+      let query = supabase.from('citizen_certificates').select('*')
+
+      if (nid) query = query.eq('nid_number', nid)
+      else if (name && dob) {
+        query = query.eq('name', name).eq('dob', dob)
+      } else {
+        results.innerText = 'Please provide NID or Name + DOB.'
+        return
+      }
+
+      const { data, error } = await query
+
+      if (error || !data || data.length === 0) {
+        results.innerHTML = '<p>No matching records found.</p>'
+        return
+      }
+
+      results.innerHTML = data.map(entry => `
+        <div style="margin: 15px 0; padding: 10px; background: #fff; border-radius: 8px;">
+          <strong>Name:</strong> ${entry.name}<br>
+          <strong>DOB:</strong> ${entry.dob}<br>
+          <strong>Address:</strong> ${entry.address || 'N/A'}<br>
+          <strong>Application Time:</strong> ${entry.created_at}
+        </div>
+      `).join('')
+    })
+  </script>
+</body>
+</html>
