@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Citizen Certificate</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <h2>Citizen Certificate Application</h2>
+  <form id="citizen-form">
+    <input type="text" id="name" placeholder="Full Name" required>
+    <input type="text" id="nid" placeholder="NID Number">
+    <input type="date" id="dob">
+    <input type="text" id="address" placeholder="Address">
+    <input type="text" id="occupation" placeholder="Occupation">
+    <button type="submit">Submit</button>
+  </form>
+  <p id="message"></p>
+
+  <script type="module">
+    import { supabase } from '../supabase/init.js'
+
+    const form = document.getElementById('citizen-form')
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      const name = document.getElementById('name').value
+      const nid_number = document.getElementById('nid').value
+      const dob = document.getElementById('dob').value
+      const address = document.getElementById('address').value
+      const occupation = document.getElementById('occupation').value
+
+      const { data, error } = await supabase
+        .from('citizen_certificates')
+        .insert([{ name, nid_number, dob, address, occupation }])
+
+      const msg = document.getElementById('message')
+      msg.innerText = error ? `Error: ${error.message}` : 'Application submitted successfully!'
+      if (!error) form.reset()
+    })
+  </script>
+</body>
+</html>
